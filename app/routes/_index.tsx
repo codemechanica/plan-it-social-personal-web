@@ -1,4 +1,5 @@
 import type { V2_MetaFunction } from "@remix-run/node";
+import { Link } from "~/components/links";
 
 export const meta: V2_MetaFunction = () => {
   return [
@@ -13,27 +14,27 @@ export default function Index() {
       <h1>Welcome to Remix</h1>
       <ul>
         <li>
-          <a
+          <Link
             target="_blank"
-            href="https://remix.run/tutorials/blog"
+            to="https://remix.run/tutorials/blog"
             rel="noreferrer"
           >
             15m Quickstart Blog Tutorial
-          </a>
+          </Link>
         </li>
         <li>
-          <a
+          <Link
             target="_blank"
-            href="https://remix.run/tutorials/jokes"
+            to="https://remix.run/tutorials/jokes"
             rel="noreferrer"
           >
             Deep Dive Jokes App Tutorial
-          </a>
+          </Link>
         </li>
         <li>
-          <a target="_blank" href="https://remix.run/docs" rel="noreferrer">
+          <Link target="_blank" to="https://remix.run/docs" rel="noreferrer">
             Remix Docs
-          </a>
+          </Link>
         </li>
       </ul>
     </div>
