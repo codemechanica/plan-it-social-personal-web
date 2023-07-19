@@ -1,5 +1,6 @@
-import type { ActionArgs } from "@remix-run/node"
-import { useActionData } from "react-router"
+import { redirect, type ActionArgs } from "@remix-run/node"
+import { Form, useActionData } from "@remix-run/react"
+import { getHash } from "~/modules/database/crypto.server"
 import { db } from "~/modules/database/db.server"
 
 
@@ -19,7 +20,30 @@ export async function action({ request }: ActionArgs) {
         return { status: 400, message: 'Passwords do not match' }
     }
 
-    return { status: 200, message: '' }
+    const cleanEmail: string = email.toString().toLowerCase().trim()
+    const user = await db.user.findUnique({ where: { email: cleanEmail }})
+
+    if (user) {
+        return { status: 400, message: 'Email already in use. Is this you? Please log in instead.' }
+    }
+
+    const newUser = await db.user.create({
+        data: {
+            name: name.toString(),
+            email: cleanEmail,
+        },
+    })
+
+    await db.password.create({
+        data: {
+            userId: newUser.id,
+            hash: await getHash(password.toString()),
+        },
+    })
+
+    // console.log('form', Object.fromEntries(form.entries()))
+
+    return redirect('/')
 }
 
 // GET
@@ -32,19 +56,31 @@ export async function loader() {
 
 export default function Component() {
 
-    const actionData = useActionData<typeof action>()
+    const actionData = useActionData()
 
     return(
         <div className="flex w-full items-center justify-center mt-20 lg:mt-40">
-            <form method="post" className="flex flex-col max-w-[800px] items-center justify-center gap-5">
+            <Form method="post" className="flex flex-col max-w-[800px] items-center justify-center gap-5">
                 <h1 className="text-4xl">Sign Up</h1>
-                <input className="bg-grayBackground" name="name" autoComplete="username" type="text" required />
-                <input className="bg-grayBackground" name="email" autoComplete="email" type="email" required />
-                <input className="bg-grayBackground" name="password" type="password" required />
-                <input className="bg-grayBackground" name="confirmPassword" type="text" required />
+                <label>
+                    Email:
+                    <input className="bg-grayBackground" name="email" autoComplete="email" type="email" required />
+                </label>
+                <label>
+                    Name:
+                    <input className="bg-grayBackground" name="name" autoComplete="username" type="text" required />
+                </label>
+                <label>
+                    Password:
+                    <input className="bg-grayBackground" name="password" type="password" required />
+                </label>
+                <label>
+                    Confirm Password:
+                    <input className="bg-grayBackground" name="confirmPassword" type="text" required />
+                </label>
                 <button type="submit">Sign Up</button>
                 { actionData && actionData.message && <p className="text-red-500">{actionData.message}</p> }
-            </form>
+            </Form>
         </div>
     )
 }
