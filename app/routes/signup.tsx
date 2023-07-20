@@ -1,7 +1,8 @@
-import { redirect, type ActionArgs } from "@remix-run/node"
+import { redirect, type ActionArgs, LoaderArgs } from "@remix-run/node"
 import { Form, useActionData } from "@remix-run/react"
 import { getHash } from "~/modules/database/crypto.server"
 import { db } from "~/modules/database/db.server"
+import { createUserSession, getUserSession } from "~/modules/session/session.server"
 
 
 export async function action({ request }: ActionArgs) {
@@ -41,17 +42,25 @@ export async function action({ request }: ActionArgs) {
         },
     })
 
+    const headers = await createUserSession(newUser.id)
+
     // console.log('form', Object.fromEntries(form.entries()))
 
-    return redirect('/')
+    return redirect('/', { headers })
 }
 
 // GET
-export async function loader() {
-    console.log('login loader')
-    const users = await db.user.findMany()
-    console.log('users', users)
+export async function loader({ request }: LoaderArgs) {
+    const session = await getUserSession(request)
+    if(session) {
+        return redirect('/')
+    }
     return {}
+
+    // console.log('login loader')
+    // const users = await db.user.findMany()
+    // console.log('users', users)
+    // return {}
 }
 
 export default function Component() {
